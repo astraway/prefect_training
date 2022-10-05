@@ -2,7 +2,7 @@ from prefect import flow, task
 import requests
 from prefect.blocks.system import Secret
 
-
+import os
 
 @task
 def fetch_data(ticker):
@@ -30,7 +30,7 @@ def write_to_file(ticker,avg):
     return True
 
 
-@flow()
+@flow(version=os.getenv("GIT_COMMIT_SHA"))
 def get_daily_avg(ticker,test):
     data =fetch_data(ticker)
     avg = get_avg(data)
