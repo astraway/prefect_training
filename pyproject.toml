@@ -8,6 +8,7 @@ authors = ["ejurotic <ejurotic@cisco.com>"]
 python = "^3.8"
 prefect = "^2.4.5"
 yfinance = "^0.1.75"
+s3fs = "^2022.8.2"
 
 [tool.poetry.dev-dependencies]
 
