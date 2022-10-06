@@ -2,6 +2,8 @@ from prefect import flow, task
 import requests
 from prefect.blocks.system import Secret
 import subprocess
+from prefect import get_run_logger
+from prefect_dask import DaskTaskRunner
 # import git
 
 
@@ -16,6 +18,7 @@ import os
 
 @task
 def fetch_data(ticker):
+
     base_url = "https://www.alphavantage.co"
     secret_block = Secret.load("alphavantage-secret")
     print(secret_block.get())
@@ -36,19 +39,23 @@ def get_avg(r):
 
 @task
 def write_to_file(ticker,avg):
+    logger = get_run_logger()
+    logger.debug("logger info test")
     print(f'the daily avg for {ticker} is {avg}')
 
     return True
 
 
-@flow(version=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip())
-def get_daily_avg(ticker,test):
+@flow(version=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip(),task_runner=DaskTaskRunner )
+def get_daily_avg(ticker):
+    logger = get_run_logger()
+    logger.info("logger info test")
     print(subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip())
-    data =fetch_data(ticker)
-    avg = get_avg(data)
-    wrote_file = write_to_file(ticker, avg)
+    data =fetch_data.map(ticker)
+    avg = get_avg.map(data)
+    wrote_file = write_to_file.map(data, avg)
 
 
 
 if __name__ == "__main__":
-    get_daily_avg("IBM","ABC")
+    get_daily_avg(["IBM","AAPL"])
